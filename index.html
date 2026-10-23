@@ -296,6 +296,16 @@
             color: #ffffff;
         }
 
+        /* 휴가용 상단 태그 스타일 */
+        .leave-tag {
+            font-size: 0.53rem;
+            font-weight: 800;
+            padding: 0 3px;
+            border-radius: 3px;
+            background: #dc2626;
+            color: #ffffff;
+        }
+
         .cell-body {
             display: flex;
             flex-direction: column;
@@ -772,7 +782,6 @@
 
     // 대한민국 주요 명절, 설/추석 연휴 및 대체공휴일 데이터 (양력 YYYY-MM-DD 매핑 - 2025~2027년)
     const KOR_SPECIAL_DATES = {
-        // 2025년 명절 및 대체공휴일
         "2025-01-28": { name: "설날연휴", type: "holiday" },
         "2025-01-29": { name: "설날", type: "holiday" },
         "2025-01-30": { name: "설날연휴", type: "holiday" },
@@ -785,19 +794,17 @@
         "2025-10-07": { name: "추석연휴", type: "holiday" },
         "2025-10-08": { name: "대체공휴일", type: "holiday" },
 
-        // 2026년 명절 및 대체공휴일 (공식 고시 기준 완벽 반영)
         "2026-02-16": { name: "설날연휴", type: "holiday" },
         "2026-02-17": { name: "설날", type: "holiday" },
         "2026-02-18": { name: "설날연휴", type: "holiday" },
-        "2026-03-02": { name: "대체공휴일", type: "holiday" }, // 삼일절 대체공휴일
+        "2026-03-02": { name: "대체공휴일", type: "holiday" },
         "2026-05-24": { name: "부처님오신날", type: "holiday" },
-        "2026-05-25": { name: "대체공휴일", type: "holiday" }, // 부처님오신날 대체공휴일
+        "2026-05-25": { name: "대체공휴일", type: "holiday" },
         "2026-09-24": { name: "추석연휴", type: "holiday" },
         "2026-09-25": { name: "추석", type: "holiday" },
         "2026-09-26": { name: "추석연휴", type: "holiday" },
-        "2026-10-05": { name: "대체공휴일", type: "holiday" }, // 개천절 대체공휴일
+        "2026-10-05": { name: "대체공휴일", type: "holiday" },
 
-        // 2027년 명절 및 대체공휴일
         "2027-02-06": { name: "설날연휴", type: "holiday" },
         "2027-02-07": { name: "설날", type: "holiday" },
         "2027-02-08": { name: "설날연휴", type: "holiday" },
@@ -843,24 +850,18 @@
         const y = date.getFullYear();
         const m = String(date.getMonth() + 1).padStart(2, '0');
         const d = String(date.getDate()).padStart(2, '0');
-        const ymdKey = `${y}-${m}-${d}`; // YYYY-MM-DD 형식 정확히 맞춤
+        const ymdKey = `${y}-${m}-${d}`;
         const mdKey = `${date.getMonth() + 1}-${date.getDate()}`;
 
-        // 1. 특수 명절 / 연휴 / 대체공휴일 체크
         if (KOR_SPECIAL_DATES[ymdKey]) {
             return { name: KOR_SPECIAL_DATES[ymdKey].name, type: 'holiday' };
         }
-
-        // 2. 고정 양력 공휴일 체크
         if (KOR_HOLIDAYS_SOLAR[mdKey]) {
             return { name: KOR_HOLIDAYS_SOLAR[mdKey], type: 'holiday' };
         }
-
-        // 3. 24절기 체크
         if (SOLAR_TERMS[mdKey]) {
             return { name: SOLAR_TERMS[mdKey], type: 'term' };
         }
-
         return null;
     }
 
@@ -1063,8 +1064,16 @@
         let isRedDay = (dayOfWeek === 0 || (holidayInfo && holidayInfo.type === 'holiday'));
         let numClass = isRedDay ? 'sun' : (dayOfWeek === 6 ? 'sat' : '');
 
-        let shiftName = shift === 'D' ? '주간' : (shift === 'N' ? '야간' : '휴일');
-        let statusText = eventData.leave || eventData.work || '';
+        // 휴가 사용 시 근무형태 태그 대신 휴가명을 해당 위치에 표기
+        let tagHtml = '';
+        if (eventData.leave) {
+            tagHtml = `<span class="leave-tag">${eventData.leave}</span>`;
+        } else {
+            let shiftName = shift === 'D' ? '주간' : (shift === 'N' ? '야간' : '휴일');
+            tagHtml = `<span class="shift-tag">${shiftName}</span>`;
+        }
+
+        let statusText = eventData.work || ''; // 대근 등 추가 상태
         let statusBadge = statusText ? `<div class="status-badge">${statusText}</div>` : '';
 
         let holidayTermHtml = '';
@@ -1083,7 +1092,7 @@
         cell.innerHTML = `
             <div class="cell-header">
                 <span class="day-number ${numClass}">${dayNum}</span>
-                <span class="shift-tag">${shiftName}</span>
+                ${tagHtml}
             </div>
             <div class="cell-body">
                 ${holidayTermHtml}
