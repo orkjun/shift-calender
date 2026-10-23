@@ -21,7 +21,7 @@
                 "purpose": "any maskable"
             }
         ],
-        "start_url": "./",
+        "start_url": "./?v=2.0",
         "background_color": "#0f172a",
         "theme_color": "#0f172a",
         "display": "standalone",
@@ -741,15 +741,13 @@
 </div>
 
 <script>
+    // 캐시를 강제로 무력화하고 항상 최신 파일을 가져오도록 Service Worker 설정 수정
     if ('serviceWorker' in navigator) {
-        const swCode = `
-            self.addEventListener('install', (e) => self.skipWaiting());
-            self.addEventListener('activate', (e) => self.clients.claim());
-            self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => new Response(''))));
-        `;
-        const blob = new Blob([swCode], {type: 'text/javascript'});
-        const swUrl = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(swUrl).catch(()=>{});
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+                registration.unregister();
+            }
+        });
     }
 
     // ===== 대한민국 고정 양력 공휴일 =====
